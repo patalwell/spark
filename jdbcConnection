@@ -36,3 +36,47 @@ return_dataframe()
 # init vars
 runtimes = []
 
+# Function for running our queries
+def run_benchmark_query(query, message):
+    print("Starting: " + message)
+    
+    # start time
+    query_start_time = datetime.now()
+    
+    # run the query and show the result
+    df = spark.sql(query)
+    df.show(100)
+    
+    # end time
+    query_stop_time = datetime.now()
+    
+    run_time = (query_stop_time-query_start_time).seconds
+    print("Runtime: %s seconds" % run_time)
+    runtimes.append(run_time)
+    print("Finishing: " + message)
+
+benchmarks = []
+
+# ========================
+run_benchmark_query("""
+SELECT
+    n_name,
+    avg(o_totalprice)
+FROM
+    customer,
+    orders,
+    lineitem,
+    supplier,
+    nation,
+    region
+WHERE
+    c_custkey = o_custkey
+    AND l_orderkey = o_orderkey
+    AND l_suppkey = s_suppkey
+    AND c_nationkey = s_nationkey
+    AND s_nationkey = n_nationkey
+    AND n_regionkey = r_regionkey
+    AND o_orderpriority = '5-LOW'
+GROUP BY
+    n_name
+""", "Run 11")
