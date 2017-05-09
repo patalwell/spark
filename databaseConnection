@@ -1,0 +1,38 @@
+#To start JDBC Connection
+
+# pyspark --packages org.postgresql:postgresql:9.4.1211 --driver-class-path /home/hadoop/postgresql-9.4.1211.jar --jars /home/hadoop/postgresql-9.4.1211.jar
+
+from pyspark import SparkContext
+from pyspark.sql import SparkSession
+from datetime import date, time
+
+sc = SparkContext()
+spark = SparkSession(sc)
+
+# vars for tables and dataFrames
+data_frames = {}
+tables = ["customer", "orders", "lineitem", "supplier", "nation", "region", "part", "partsupp"]
+
+# DB credentials
+user ="user"
+password="pass"
+
+# DB connection parameters
+jdbc_url="jdbc:postgresql://user.cgjfkjdlsfjsg.us-region-1.rds.amazonaws.com:5432/postgres"
+
+
+def return_dataframe():
+    for table in tables:
+        # create df
+        data_frames["df_" + table] = spark.read \
+            .jdbc(jdbc_url, table,
+                  properties={"user": user, "password": password})
+        # register tempTables
+        data_frames["df_" + table].registerTempTable(table)
+
+# calling our udf to load tables
+return_dataframe()
+
+# init vars
+runtimes = []
+
