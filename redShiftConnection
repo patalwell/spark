@@ -1,0 +1,99 @@
+# To set up EMR for consumption from RedShift
+# 1. Add a step that downloads the JDBC driver -->
+# wget https://s3.amazonaws.com/redshift-downloads/drivers/RedshiftJDBC42-1.2.1.1001.jar
+#aws emr create-cluster ... --steps Name='Download Redshift JDBC Driver',Jar=command-runner.jar,
+# Args=[wget,-P,/home/hadoop,https://s3.amazonaws.com/redshift-downloads/drivers/RedshiftJDBC41-1.1.10.1010.jar
+
+# To run this package, flag in parameters as followed:
+# pyspark --packages com.databricks:spark-redshift_2.11:3.0.0-preview1 --jars /home/hadoop/RedshiftJDBC42-1.2.1.1001.jar
+# spark-submit --packages com.databricks:spark-redshift_2.11:3.0.0-preview1 --jars /home/hadoop/RedshiftJDBC42-1.2.1.1001.jar
+
+# java.lang.NoClassDefFoundError: scala/collection/GenTraversableOnce$class -->
+# make sure you have the correct package version 10 or 11 depending on the version of scala you've used 
+# to build Spark (e.g. com.databricks:spark-redshift_2.11:3.0.0-preview1 or
+# com.databricks:spark-redshift_2.10:3.0.0-preview1)
+
+from pyspark import SparkContext
+from pyspark.sql import SparkSession
+from datetime import datetime, time
+
+sc = SparkContext()
+spark = SparkSession(sc)
+
+# vars for tables and dataFrames
+data_frames = {}
+tables = ["customer", "orders", "lineitem", "supplier", "nation", "region", "part", "partsupp"]
+
+# DB credentials
+user = "username"
+password="pass"
+
+# DB connection parameters
+jdbc_url="jdbc:redshift://tpch.dfhhsrdfgdfgfd.us-region-1.redshift.amazonaws.com:5439/username"+"?"
+iam_role="arn:aws:iam::sample24845843809:role/My_EMR_Role"
+temp_data="s3://unique-bucket/path-to-folder"
+
+# function that creates dataFrames and tempTables, appending to our dictionary and iterating table elements
+def return_dataframe():
+    for table in tables:
+        # create df
+        data_frames["df_" + table] = spark.read \
+            .format("com.databricks.spark.redshift") \
+            .option("url",jdbc_url) \
+            .option("user",user)\
+            .option("password",password)\
+            .option("aws_iam_role",iam_role) \
+            .option("dbtable", table) \
+            .option("tempdir", temp_data) \
+            .load()
+        # register tempTables
+        data_frames["df_" + table].registerTempTable(table)
+
+
+# calling our udf to load tables
+return_dataframe()
+
+# Function for running our queries
+def run_benchmark_query(query, message):
+    print("Starting: " + message)
+    
+    # start time
+    query_start_time = datetime.now()
+    
+    # run the query and show the result
+    df = spark.sql(query)
+    df.show(100)
+    
+    # end time
+    query_stop_time = datetime.now()
+    
+    run_time = (query_stop_time-query_start_time).seconds
+    print("Runtime: %s seconds" % run_time)
+    runtimes.append(run_time)
+    print("Finishing: " + message)
+
+benchmarks = []
+
+# ========================
+run_benchmark_query("""
+SELECT
+    n_name,
+    avg(o_totalprice)
+FROM
+    customer,
+    orders,
+    lineitem,
+    supplier,
+    nation,
+    region
+WHERE
+    c_custkey = o_custkey
+    AND l_orderkey = o_orderkey
+    AND l_suppkey = s_suppkey
+    AND c_nationkey = s_nationkey
+    AND s_nationkey = n_nationkey
+    AND n_regionkey = r_regionkey
+    AND o_orderpriority = '5-LOW'
+GROUP BY
+    n_name
+""", "Run 11")
