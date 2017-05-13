@@ -50,22 +50,6 @@ def runBenchmarkQuery(query,message):
   print ("Finishing: " + message);
   return
 
-#Errors during coying of original SQL Query to a DF API
-    #.where(df_orders.o_orderdate < f.add_months('1993-01-01', '12'))
-    #py4j.Py4JException: Method add_months([class org.apache.spark.sql.Column, class java.lang.String]) does not exist
-#It doesn't seem like the DF Spark API supports the method add_months for predicates, so I changed the predicate to read as '1994-01-01'
-
-# def add_months(start, months):
-#     """
-#     Returns the date that is `months` months after `start`
-
-#     >>> df = spark.createDataFrame([('2015-04-08',)], ['d'])
-#     >>> df.select(add_months(df.d, 1).alias('d')).collect()
-#     [Row(d=datetime.date(2015, 5, 8))]
-#     """
-#     sc = SparkContext._active_spark_context
-#     return Column(sc._jvm.functions.add_months(_to_java_column(start), months))
-
 
 #========================
 # RUN 1
@@ -83,7 +67,7 @@ df_customer\
 .where(df_supplier.s_nationkey == df_nation.n_nationkey)\
 .where(df_nation.n_regionkey == df_region.r_regionkey)\
 .where(df_region.r_name == 'AFRICA')\
-.where(df_orders.o_orderdate >='1993-01-01')\
+.where(f.add_months(df_orders.o_orderdate,12) >='1993-01-01')\
 .where(df_orders.o_orderdate < '1994-01-01')\
 .groupby(df_nation.n_name)\
 .agg(f.sum((df_lineitem.l_extendedprice * (1 - df_lineitem.l_discount)).alias('revenue')))\
@@ -105,7 +89,7 @@ df_customer\
 .where(df_supplier.s_nationkey == df_nation.n_nationkey)\
 .where(df_nation.n_regionkey == df_region.r_regionkey)\
 .where(df_region.r_name == 'AMERICA')\
-.where(df_orders.o_orderdate >='1993-01-01')\
+.where(f.add_months(df_orders.o_orderdate,12) >='1993-01-01')\
 .where(df_orders.o_orderdate < '1994-01-01')\
 .groupby(df_nation.n_name)\
 .agg(f.sum((df_lineitem.l_extendedprice * (1 - df_lineitem.l_discount)).alias('revenue')))\
@@ -128,7 +112,7 @@ df_customer\
 .where(df_supplier.s_nationkey == df_nation.n_nationkey)\
 .where(df_nation.n_regionkey == df_region.r_regionkey)\
 .where(df_region.r_name == 'ASIA')\
-.where(df_orders.o_orderdate >='1993-01-01')\
+.where(f.add_months(df_orders.o_orderdate,12) >='1993-01-01')\
 .where(df_orders.o_orderdate < '1994-01-01')\
 .groupby(df_nation.n_name)\
 .agg(f.sum((df_lineitem.l_extendedprice * (1 - df_lineitem.l_discount)).alias('revenue')))\
@@ -150,7 +134,7 @@ df_customer\
 .where(df_supplier.s_nationkey == df_nation.n_nationkey)\
 .where(df_nation.n_regionkey == df_region.r_regionkey)\
 .where(df_region.r_name == 'EUROPE')\
-.where(df_orders.o_orderdate >='1993-01-01')\
+.where(f.add_months(df_orders.o_orderdate,12) >='1993-01-01')\
 .where(df_orders.o_orderdate < '1994-01-01')\
 .groupby(df_nation.n_name)\
 .agg(f.sum((df_lineitem.l_extendedprice * (1 - df_lineitem.l_discount)).alias('revenue')))\
@@ -172,7 +156,7 @@ df_customer\
 .where(df_supplier.s_nationkey == df_nation.n_nationkey)\
 .where(df_nation.n_regionkey == df_region.r_regionkey)\
 .where(df_region.r_name == 'MIDDLE EAST')\
-.where(df_orders.o_orderdate >='1993-01-01')\
+.where(f.add_months(df_orders.o_orderdate,12) >='1993-01-01')\
 .where(df_orders.o_orderdate < '1994-01-01')\
 .groupby(df_nation.n_name)\
 .agg(f.sum((df_lineitem.l_extendedprice * (1 - df_lineitem.l_discount)).alias('revenue')))\
@@ -194,7 +178,7 @@ df_customer\
 .where(df_supplier.s_nationkey == df_nation.n_nationkey)\
 .where(df_nation.n_regionkey == df_region.r_regionkey)\
 .where(df_region.r_name == 'AFRICA')\
-.where(df_orders.o_orderdate >='1993-01-01')\
+.where(f.add_months(df_orders.o_orderdate,12) >='1993-01-01')\
 .where(df_orders.o_orderdate < '1994-01-01')\
 .groupby(df_nation.n_name)\
 .agg(f.sum((df_lineitem.l_extendedprice * (1 - df_lineitem.l_discount)).alias('revenue')))\
@@ -217,7 +201,7 @@ df_customer\
 .where(df_supplier.s_nationkey == df_nation.n_nationkey)\
 .where(df_nation.n_regionkey == df_region.r_regionkey)\
 .where(df_region.r_name == 'AMERICA')\
-.where(df_orders.o_orderdate >='1993-01-01')\
+.where(f.add_months(df_orders.o_orderdate,12) >='1993-01-01')\
 .where(df_orders.o_orderdate < '1994-01-01')\
 .groupby(df_nation.n_name)\
 .agg(f.sum((df_lineitem.l_extendedprice * (1 - df_lineitem.l_discount)).alias('revenue')))\
@@ -239,7 +223,7 @@ df_customer\
 .where(df_supplier.s_nationkey == df_nation.n_nationkey)\
 .where(df_nation.n_regionkey == df_region.r_regionkey)\
 .where(df_region.r_name == 'ASIA')\
-.where(df_orders.o_orderdate >='1993-01-01')\
+.where(f.add_months(df_orders.o_orderdate,12) >='1993-01-01')\
 .where(df_orders.o_orderdate < '1994-01-01')\
 .groupby(df_nation.n_name)\
 .agg(f.sum((df_lineitem.l_extendedprice * (1 - df_lineitem.l_discount)).alias('revenue')))\
@@ -261,7 +245,7 @@ df_customer\
 .where(df_supplier.s_nationkey == df_nation.n_nationkey)\
 .where(df_nation.n_regionkey == df_region.r_regionkey)\
 .where(df_region.r_name == 'EUROPE')\
-.where(df_orders.o_orderdate >='1993-01-01')\
+.where(f.add_months(df_orders.o_orderdate,12) >='1993-01-01')\
 .where(df_orders.o_orderdate < '1994-01-01')\
 .groupby(df_nation.n_name)\
 .agg(f.sum((df_lineitem.l_extendedprice * (1 - df_lineitem.l_discount)).alias('revenue')))\
@@ -284,7 +268,7 @@ df_customer\
 .where(df_supplier.s_nationkey == df_nation.n_nationkey)\
 .where(df_nation.n_regionkey == df_region.r_regionkey)\
 .where(df_region.r_name == 'MIDDLE EAST')\
-.where(df_orders.o_orderdate >='1993-01-01')\
+.where(f.add_months(df_orders.o_orderdate,12) >='1993-01-01')\
 .where(df_orders.o_orderdate < '1994-01-01')\
 .groupby(df_nation.n_name)\
 .agg(f.sum((df_lineitem.l_extendedprice * (1 - df_lineitem.l_discount)).alias('revenue')))\
