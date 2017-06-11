@@ -8,58 +8,83 @@ from datetime import datetime
 """This is a pyspark application that creates parquet files from raw tabular data."""
 
 #raw output
-data = ['1|AAAAAAAABAAAAAAA|18|Jackson |Parkway|Suite 280|Fairfield|Maricopa County|AZ|86192|United States|-7|condo|', 
-'2|AAAAAAAACAAAAAAA|362|Washington 6th|RD|Suite 80|Fairview|Taos County|NM|85709|United States|-7|condo|',
-'3|AAAAAAAADAAAAAAA|585|Dogwood Washington|Circle|Suite Q|Pleasant Valley|York County|PA|12477|United States|-5|single family|',
-'4|AAAAAAAAEAAAAAAA|111|Smith |Wy|Suite A|Oak Ridge|Kit Carson County|CO|88371|United States|-7|condo|', 
-'5|AAAAAAAAFAAAAAAA|31|College |Blvd|Suite 180|Glendale|Barry County|MO|63951|United States|-6|single family|']
+data = sc.textFile("s3://customer_address.dat",numParitions)
 
-# Create a mapping function  for row
-#lines = sc.textFile("s3a://aqa-query-testing/tpcds/1G/raw/dbgen_version.dat")
-lines = sc.paralellize(data)
-split = lines.map(lambda l: l.split("|"))
-row = split.map(lambda r: (r[0],(r[1]),(r[2]),r[3]))
+    # original SQL Database schema for this table
+    # (
+    #     ca_address_sk             integer               not null,
+    #     ca_address_id             char(16)              not null,
+    #     ca_street_number          char(10)                      ,
+    #     ca_street_name            varchar(60)                   ,
+    #     ca_street_type            char(15)                      ,
+    #     ca_suite_number           char(10)                      ,
+    #     ca_city                   varchar(60)                   ,
+    #     ca_county                 varchar(30)                   ,
+    #     ca_state                  char(2)                       ,
+    #     ca_zip                    char(10)                      ,
+    #     ca_country                varchar(20)                   ,
+    #     ca_gmt_offset             decimal(5,2)                  ,
+    #     ca_location_type          char(20)                      ,
+    #     primary key (ca_address_sk)
+    # );
 
-#build the schema as an array calling StructType on StructField (x,y)
+    # Import the above sample data into RDD
+    #lines = sc.parallelize(data)
+
+# map the data, return data as a Row, and cast data types of some fields
+split = data.map(lambda l: l.split("|"))
+row = split.map(lambda r: Row(
+       ca_address_sk=int(r[0]),
+       ca_address_id=r[1],
+       ca_street_number=r[2],
+       ca_street_name=r[3],
+       ca_street_type=r[4],
+       ca_suite_number=r[5],
+       ca_city=r[6],
+       ca_county=r[7],
+       ca_state=r[8],
+       ca_zip=r[9],
+       ca_country=r[10],
+       ca_gmt_offset=None if r[11]=='' else Decimal(r[11]),
+       ca_location_type=r[12])
+    )
+
+#build strict schema for the table closely based on the original sql schema
 schema = types.StructType([
-       types.StructField('dv_version',types.StringType())
-       ,types.StructField('dv_create_date',types.DateType())
-       ,types.StructField('dv_create_time',types.DateType())
-       ,types.StructField('dv_cmdline_args',types.StringType())])
+       types.StructField('ca_address_sk',types.IntegerType(),False)
+       ,types.StructField('ca_address_id',types.StringType(),False)
+       ,types.StructField('ca_street_number',types.StringType())
+       ,types.StructField('ca_street_name',types.StringType())
+       ,types.StructField('ca_street_type',types.StringType())
+       ,types.StructField('ca_suite_number',types.StringType())
+       ,types.StructField('ca_city',types.StringType())
+       ,types.StructField('ca_county',types.StringType())
+       ,types.StructField('ca_state',types.StringType())
+       ,types.StructField('ca_zip',types.StringType())
+       ,types.StructField('ca_country',types.StringType())
+       ,types.StructField('ca_gmt_offset',types.DecimalType(5,2))
+       ,types.StructField('ca_location_type',types.StringType())])
 
-# create table customer_address
-# (
-#     ca_address_sk             integer               not null,
-#     ca_address_id             char(16)              not null,
-#     ca_street_number          char(10)                      ,
-#     ca_street_name            varchar(60)                   ,
-#     ca_street_type            char(15)                      ,
-#     ca_suite_number           char(10)                      ,
-#     ca_city                   varchar(60)                   ,
-#     ca_county                 varchar(30)                   ,
-#     ca_state                  char(2)                       ,
-#     ca_zip                    char(10)                      ,
-#     ca_country                varchar(20)                   ,
-#     ca_gmt_offset             decimal(5,2)                  ,
-#     ca_location_type          char(20)                      ,
-#     primary key (ca_address_sk)
-# );
+# create data frame by passing in the mapped data AND its strict schema
+customer_address = spark.createDataFrame(row,schema)
 
-# Infer the schema, and register the DataFrame as a table.
-dbgen_version = spark.createDataFrame(row,schema)
-dbgen_version.createOrReplaceTempView("dbgen_version")
+#create parquet file
+customer_address.write.parquet(s3Path + "customer_address.parquet")
+
+# create temp table name of the new table
+customer_address.createOrReplaceTempView("customer_address")
 
 #write DF to parquet file
-#schemaPeople.write.parquet("C:/SparkPython/people.parquet")
+#customer_address.write.parquet("C:/SparkPython/customer.parquet")
 
 #read in the parquet file
-#parquetFileDF = spark.read.parquet("C:/SparkPython/people.parquet")
+#parquetFileDF = spark.read.parquet("C:/SparkPython/customer.parquet")
 
 #create a temp view to run SQL
-#parquetFileDF.createOrReplaceTempView("parquetFile")
+#parquetFileDF.createOrReplaceTempView("customer")
 
 # SQL can be run over parquet file as the temp viewD
-results = spark.sql("SELECT * FROM dbgen_version")
+results = spark.sql("SELECT * FROM customer LIMIT 5")
 
 results.show()
 
