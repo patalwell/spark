@@ -4,8 +4,8 @@ from pyspark.sql import *
 sc = SparkContext
 spark = SparkSession(sc)
 
-# Load the CSV with Spark load attribute, header is in file
-# Note in this case csv_data is loaded as a dataframe
+# Load the CSV with Spark read.csv() attribute, header is in file so we can add a header = T or F argument
+# Note: csv_data is now a dataframe object
 csv_data = spark.read.csv("/Users/palwell/PycharmProjects/localCode/CCA175/2008.csv", header=True)
 
 # create a tempview
