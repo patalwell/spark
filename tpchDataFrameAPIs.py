@@ -1,11 +1,3 @@
-#Background: Users might be curious to learn more about how our product inherently speeds up queries.
-# Instead of creating an adjacent data store, our query accelerator performs the task of a skilled DBA \
-# by effectively caching and storing an adjacent algebraic expression store. The expression store allows for a greater range of \
-# queries than an adjacent data store or index/library could alone perform.
-# What's more, this process is autonomous and limits the use of added hardware and intellectual capital.
-# This application is a DF benchmarking tool for QA purposes
-
-
 # module imports for our application
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
