@@ -10,10 +10,11 @@ data = sc.textFile("/Users/palwell/PycharmProjects/localCode/CCA175/2008.csv")
 
 # Load the CSV with Spark load attribute, header is in file
 # Note in this case csv_data is loaded as a dataframe
-csv_data = spark.load.csv("/Users/palwell/PycharmProjects/localCode/CCA175/2008.csv", header=True)
+csv_data = spark.read.csv("/Users/palwell/PycharmProjects/localCode/CCA175/2008.csv", header=True)
 
 #Infer the Schema
 data.take(1)
+csv_data.take(1)
 
 #[u'Year,Month,DayofMonth,DayOfWeek,DepTime,CRSDepTime,ArrTime,CRSArrTime,UniqueCarrier,FlightNum,TailNum,ActualElapsedTime,\
 #CRSElapsedTime,AirTime,ArrDelay,DepDelay,Origin,Dest,Distance,TaxiIn,TaxiOut,Cancelled,CancellationCode,Diverted,CarrierDelay,\
